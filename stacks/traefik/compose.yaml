@@ -1,0 +1,52 @@
+services:
+  traefik-sp:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: traefik-sp
+    environment:
+      - CONTAINERS=1 #optional
+      - EVENTS=1 #optional
+      - NETWORKS=1 #optional
+      - SERVICES=1 #optional
+      - PING=1
+      - VERSION=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /run
+    networks:
+      - traefik-sp
+
+  traefik:
+    image: docker.io/library/traefik:latest
+    container_name: traefik
+    user: "1000:1000"
+    depends_on: 
+      - traefik-sp
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-config:/etc/traefik/:ro
+      - traefik-certs:/var/traefik/certs/:rw
+      - traefik-logs:/var/log/traefik/
+    environment:
+      CF_DNS_API_TOKEN: ${API_TOKEN}
+    networks:
+      - traefik
+      - traefik-sp
+    restart: unless-stopped
+
+networks:
+  traefik:
+    external: false
+    name: traefik
+  traefik-sp:
+    internal: true
+
+volumes:
+  traefik-config:
+  traefik-certs:
+  traefik-logs:

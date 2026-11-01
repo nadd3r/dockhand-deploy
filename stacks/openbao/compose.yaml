@@ -1,0 +1,39 @@
+services:
+  openbao:
+    image: openbao/openbao:latest
+    container_name: openbao
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - traefik
+    volumes:
+      - openbao-data:/openbao/data
+      - openbao-config:/openbao/config/
+    command:
+      - server
+      - -config=/openbao/config/openbao.hcl
+    environment:
+      - BAO_ADDR=http://0.0.0.0:8200
+    healthcheck:
+      test: ["CMD", "bao", "status", "-format=json"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.openbao.loadbalancer.server.port=8200
+      - traefik.http.services.openbao.loadbalancer.server.scheme=http
+      - traefik.http.routers.openbao.entrypoints=websecure
+      - traefik.http.routers.openbao.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.openbao.tls=true
+      - traefik.http.routers.openbao.tls.certresolver=cloudflare
+
+networks:
+  traefik:
+    external: true
+
+volumes:
+  openbao-data:
+  openbao-config:
