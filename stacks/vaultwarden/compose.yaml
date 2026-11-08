@@ -3,6 +3,8 @@ services:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     restart: unless-stopped
+    networks:
+    - traefik
     environment:
       DOMAIN: "https://${DOMAIN_NAME}"
       SENDS_ALLOWED: ${SENDS_ALLOWED}
