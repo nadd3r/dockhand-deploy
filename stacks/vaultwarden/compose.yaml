@@ -1,0 +1,26 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: "https://${DOMAIN_NAME}"
+      SENDS_ALLOWED: ${SENDS_ALLOWED}
+      SIGNUPS_ALLOWED: ${SIGNUPS_ALLOWED}
+    volumes:
+      - vw-data:/data/
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.vaultwarden.loadbalancer.server.port=80
+      - traefik.http.services.vaultwarden.loadbalancer.server.scheme=http
+      - traefik.http.routers.vaultwarden.entrypoints=websecure
+      - traefik.http.routers.vaultwarden.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.vaultwarden.tls=true
+      - traefik.http.routers.vaultwarden.tls.certresolver=cloudflare
+
+networks:
+  traefik:
+    external: true
+
+volumes:
+  vw-data:
